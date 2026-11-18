@@ -17,12 +17,15 @@ docker compose up --build -d
 - 跨夜配对：`/m3_versions`、`/api/m3_versions`
 - 缺卡复核：`/m4_segments`、`/api/m4_segments`
 - 工时切段：`/m5_calculate`、`/api/m5_calculate`
+- 夜班餐补：`/m8_meal`、`/api/m8_meal`
 - 薪资对账：`/m6_reconcile`、`/api/m6_reconcile`
 - 周期归档：`/m7_archive`、`/api/m7_archive`
 
 ## 核心规则
 
 跨夜按班次归属日配对，休息区间先扣除，再按法定日期和工时阈值切分倍率。完整数值、边界和异常定义见 `docs/DATA-DICTIONARY.md`。
+
+夜班餐补不按已确认班次先发：资格以切段后的实际有效时段判定，每班 15 元，夜段 ≥ 300 分钟且有效工时 ≥ 360 分钟才发。同班重跑按依据摘要重放或失效，不重复计发；补卡/切段/餐补规则变化使旧餐补失效重算；重算失败沿用旧版可发结果并阻断封账。餐补未与工资对平不得导出封账包，页面可逐班核对依据，原始记录随封存证据保留。
 
 ## 验证
 

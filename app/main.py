@@ -20,7 +20,7 @@ def create_app():
     def health():return jsonify(status='ok')
     @app.post('/api/runs')
     def submit():
-        content,params=payload();state=run(content,params);return jsonify(store.save(state['run_id'],state))
+        content,params=payload();state=run(content,params,prior=store.meal_prior(params));return jsonify(store.save(state['run_id'],state))
     @app.get('/api/runs')
     def list_runs():return jsonify(store.history())
     @app.get('/api/runs/<run_id>')
@@ -33,7 +33,9 @@ def create_app():
     @app.get('/api/archive/<run_id>/export.csv')
     def download(run_id):
         state=store.get(run_id)
-        if not state.get('reconcile',{}).get('balanced'):raise DomainError('UNBALANCED','对账未平')
+        reconcile=state.get('reconcile',{})
+        if not reconcile.get('ready'):
+            raise DomainError('UNBALANCED','对账未平或餐补未与工资对平')
         return Response(bundle(state),mimetype='text/csv; charset=utf-8',headers={'Content-Disposition':'attachment; filename=evidence.csv'})
     with app.app_context():
         if not store.history():

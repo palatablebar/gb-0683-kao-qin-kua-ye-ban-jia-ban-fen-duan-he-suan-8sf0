@@ -11,6 +11,7 @@
 | M3 跨夜配对 | 查看并复算跨夜配对 | `/api/m3_versions` | `app/modules/m3_versions/rules.py` | `tests/test_versions.py` |
 | M4 缺卡复核 | 查看并复算缺卡复核 | `/api/m4_segments` | `app/modules/m4_segments/rules.py` | `tests/test_segments.py` |
 | M5 工时切段 | 查看并复算工时切段 | `/api/m5_calculate` | `app/modules/m5_calculate/rules.py` | `tests/test_calculate.py` |
+| M8 夜班餐补 | 按切段核对并复算餐补 | `/api/m8_meal` | `app/modules/m8_meal/rules.py` | `tests/test_meal.py` |
 | M6 薪资对账 | 查看并复算薪资对账 | `/api/m6_reconcile` | `app/modules/m6_reconcile/compare.py` | `tests/test_reconcile.py` |
 | M7 周期归档 | 查看并复算周期归档 | `/api/m7_archive` | `app/modules/m7_archive/export_out.py` | `tests/test_archive.py` |
 
@@ -31,10 +32,15 @@
 | TRAP-26 | 旧版本复核 | 覆盖新结论 | 事务条件更新 | `app/store.py` | `tests/test_archive.py::test_stale_review` |
 | TRAP-23 | 休息与跨夜端点 | 重复或漏计 | 半开区间切片 | `app/modules/m4_segments/rules.py` | `tests/test_segments.py::test_break_removed` |
 | TRAP-19 | 假日与周末重叠 | 费率相加 | 假日优先 | `app/modules/m5_calculate/rules.py` | `tests/test_calculate.py::test_holiday_overrides_rest` |
+| TRAP-27 | 临时加休息改变有效时段 | 按已确认班次先发 | 切段驱动重判，按书面裁决见数据字典 | `app/modules/m8_meal/rules.py` | `tests/test_meal.py::test_extra_break_can_disqualify` |
+| TRAP-28 | 同班重跑重复计发 | 每次新增一条餐补 | 依据摘要重放/失效 | `app/modules/m8_meal/rules.py` | `tests/test_meal.py::test_rerun_same_basis_replays_without_double_counting` |
+| TRAP-29 | 补卡规则变化后沿用旧餐补 | 旧版照发 | 规则版本入摘要，旧版失效 | `app/modules/m8_meal/rules.py` | `tests/test_meal.py::test_rule_version_change_invalidates_old_allowance` |
+| TRAP-30 | 重算失败丢结果或照常封账 | 清零或直接导出 | 兜底留旧版并阻断封账 | `app/modules/m8_meal/rules.py` | `tests/test_meal.py::test_recalc_failure_carries_old_result_and_blocks_archive` |
+| TRAP-31 | 餐补未与工资对平即封账 | 仅核对行数 | 餐补逐班重算并对平再放行 | `app/modules/m6_reconcile/compare.py` | `tests/test_meal.py::test_meal_wage_mismatch_breaks_reconcile` |
 
 ## 对账规则
 
-输入行数=采纳+隔离+空行+重复表头+完全重复；业务总数与计算证据独立求和。隔离行保留来源行、ID、原因码与原值。
+输入行数=采纳+隔离+空行+重复表头+完全重复；业务总数与计算证据独立求和。隔离行保留来源行、ID、原因码与原值。餐补记录另按班次核对：逐班金额=重算值、合计=工资侧餐补、失效记录不计发；餐补未平不得导出封账包。
 
 ## 已知不覆盖
 
